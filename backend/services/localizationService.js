@@ -23,7 +23,21 @@ export async function runFaultLocalization(dt_id) {
         const statsRes = await pool.query(statsQuery, [dt_id]);
         const { total_poles, dark_poles, mapped_poles } = statsRes.rows[0];
 
-        if (dark_poles == 0) return; // False alarm or already resolved
+        // NEW LOGIC: If all poles are live, verify any open tickets for this DT
+        if (dark_poles == 0) {
+            const verifyQuery = `
+                UPDATE tickets 
+                SET status = 'VERIFIED', verified_at = CURRENT_TIMESTAMP
+                WHERE dt_id = $1 AND status != 'VERIFIED'
+                RETURNING ticket_id;
+            `;
+            const verifyRes = await pool.query(verifyQuery, [dt_id]);
+            
+            if (verifyRes.rows.length > 0) {
+                console.log(`[Verification] Ticket(s) ${verifyRes.rows.map(r => r.ticket_id).join(', ')} auto-verified based on telemetry.`);
+            }
+            return; 
+        }
 
         // Step 3: DT Fault Check (Are ALL poles dark?)
         if (dark_poles === total_poles) {
@@ -72,11 +86,11 @@ export async function runFaultLocalization(dt_id) {
 
 async function createTicket(type, dt_id, target_id, affected_count, pincode = null) {
     const query = `
-        INSERT INTO tickets (fault_type, target_id, affected_count, pincode)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO tickets (fault_type, target_id, affected_count, pincode, dt_id)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING ticket_id;
     `;
-    const res = await pool.query(query, [type, target_id, affected_count, pincode]);
+    const res = await pool.query(query, [type, target_id, affected_count, pincode, dt_id]);
     console.log(`✅ Ticket Created [${type}] - Target: ${target_id} | ID: ${res.rows[0].ticket_id}`);
 }
 

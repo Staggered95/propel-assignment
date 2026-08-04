@@ -23,6 +23,7 @@ CREATE TABLE poles (
 -- Create the tickets table
 CREATE TABLE tickets (
     ticket_id SERIAL PRIMARY KEY,
+    dt_id VARCHAR(50),
     fault_type VARCHAR(20) NOT NULL, -- 'SPAN', 'DT', 'FEEDER'
     target_id VARCHAR(50) NOT NULL,  -- e.g., 'P-102_P-104' or 'D-0112'
     status VARCHAR(20) DEFAULT 'DETECTED', 
