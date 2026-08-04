@@ -2,7 +2,7 @@ import { Database, Network, ShieldAlert } from 'lucide-react';
 
 export default function Docs() {
   return (
-    <div className="max-w-4xl mx-auto py-8 space-y-12 h-[calc(100vh-100px)] overflow-y-auto no-scrollbar">
+    <div className="max-w-4xl mx-auto py-8 space-y-12 h-[calc(100vh-100px)] overflow-y-auto scrollbar-none">
       <div className="space-y-4">
         <h1 className="text-4xl font-bold text-text-primary transition-colors">KSPDB Project Details</h1>
         <p className="text-lg text-text-muted transition-colors">A physics-aware, highly concurrent fault localization engine.</p>

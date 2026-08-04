@@ -14,15 +14,19 @@ export default function Metrics() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get('/api/tickets');
-        const active = res.data;
+        // Fetch BOTH tickets and raw network data simultaneously
+        const [ticketsRes, networkRes] = await Promise.all([
+          axios.get('/api/tickets'),
+          axios.get('/api/network')
+        ]);
         
-        let mapped = 0; // SPAN / FEEDER faults require topology
-        let unmapped = 0; // CLUSTER faults trigger when topology is 0
-        let totalAffected = 0;
+        const active = ticketsRes.data;
+        const allPoles = networkRes.data;
+        
+        let mapped = 0; 
+        let unmapped = 0; 
 
         active.forEach(t => {
-          totalAffected += t.affected_count || 0;
           if (t.fault_type === 'CLUSTER') {
             unmapped += 1;
           } else {
@@ -30,8 +34,12 @@ export default function Metrics() {
           }
         });
 
+        // FIX: Calculate true dark poles by looking at the raw sensor state, 
+        // completely ignoring ticket overlaps.
+        const trueDarkPoles = allPoles.filter(p => !p.is_live).length;
+
         setTickets(active);
-        setStats({ mapped, unmapped, totalAffected });
+        setStats({ mapped, unmapped, totalAffected: trueDarkPoles });
         hasAlertedRef.current = false;
       } catch (err) {
         if (!hasAlertedRef.current) {
@@ -42,7 +50,7 @@ export default function Metrics() {
     };
     
     fetchData();
-    const interval = setInterval(fetchData, 10000); // Poll every 10s
+    const interval = setInterval(fetchData, 10000); 
     return () => clearInterval(interval);
   }, [addToast]);
 

@@ -58,7 +58,7 @@ export default function SimulatorControls() {
       
       let padLength = 6; 
       if (batchTargetType === 'D') padLength = 4; 
-      if (batchTargetType === 'F') padLength = 3; 
+      if (batchTargetType === 'F') padLength = 2; 
       
       const paddedNum = String(num).padStart(padLength, '0');
       return `${batchTargetType}-${paddedNum}`;
@@ -104,7 +104,7 @@ export default function SimulatorControls() {
         </button>
       </div>
 
-      <div className="p-6 flex-1 overflow-y-auto">
+      <div className="p-6 flex-1 overflow-y-auto scrollbar-none">
         <div className="mb-6">
           <h2 className="text-xl font-bold text-text-primary mb-1 transition-colors">Simulator Uplink</h2>
           <p className="text-sm text-text-muted">Inject real-time telemetry artifacts into the grid.</p>

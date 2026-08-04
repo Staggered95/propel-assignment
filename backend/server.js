@@ -4,6 +4,7 @@ import simulatorRoutes from './routes/simulator.js';
 import ticketRoutes from './routes/tickets.js';
 import outageRoutes from './routes/outages.js';
 import networkRoutes from './routes/network.js';
+import { initTopologyCache } from './services/topologyService.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +22,7 @@ app.use('/outages', outageRoutes);
 // Health check for Docker
 app.get('/health', (req, res) => res.status(200).send('OK'));
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`🚀 Backend ingestion engine running on port ${PORT}`);
+    await initTopologyCache();
 });
