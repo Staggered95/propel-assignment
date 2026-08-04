@@ -140,3 +140,45 @@ export const repairFault = async (req, res) => {
         console.error("[Simulator] Error injecting repair:", error);
     }
 };
+
+
+export const injectNoise = async (req, res) => {
+    const { target_id } = req.body; // e.g., "P-000302"
+
+    if (!target_id) {
+        return res.status(400).json({ error: "Missing target_id" });
+    }
+
+    try {
+        const result = await pool.query(`SELECT pole_id, device_id FROM poles WHERE pole_id = $1`, [target_id]);
+        
+        if (result.rows.length === 0 || !result.rows[0].device_id) {
+            return res.status(404).json({ error: "Pole not found or has no device." });
+        }
+
+        const pole = result.rows[0];
+
+        res.status(202).json({ message: `Simulating dead sensor (noise) on ${pole.pole_id}.` });
+
+        // Fire a single dying gasp for just this one pole
+        const payload = {
+            device_id: pole.device_id,
+            pole_id: pole.pole_id,
+            event: 'power_lost',
+            energized: false,
+            ts: new Date().toISOString(),
+            seq: Math.floor(Math.random() * 10000),
+            fw: '1.4.2'
+        };
+
+        fetch('http://localhost:3000/telemetry', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(err => console.error(`Failed to send noise telemetry`));
+
+    } catch (error) {
+        console.error("[Simulator] Error injecting noise:", error);
+        res.status(500).json({ error: "Failed to inject noise" });
+    }
+};

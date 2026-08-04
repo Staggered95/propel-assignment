@@ -50,31 +50,42 @@ export async function runFaultLocalization(dt_id) {
 
         if (isUnmapped) {
             // 60% Case: Unknown Topology
-            // We can't find a span, so we group all dark poles under a DT-level ticket
+            // Noise Filter: If only 1 pole is dark out of the whole cluster, it's highly likely just a dead sensor.
+            // A real wire break or DT fault would take out multiple poles.
+            if (dark_poles === 1) {
+                console.log(`[Localization] Dead sensor (Noise) ignored on unmapped DT ${dt_id}.`);
+                return;
+            }
+
             console.log(`[Localization] 60% Unmapped Case detected for ${dt_id}.`);
             await createTicket('CLUSTER', dt_id, dt_id, dark_poles);
         } else {
             // 40% Case: Known Topology
-            // Find the exact broken span: A dark pole whose parent is still live.
+            // Find the exact broken span: A dark pole whose parent is live, 
+            // AND crucially, it must NOT have any live children. 
+            // If it has a live child, the power is clearly still flowing through it!
             const spanQuery = `
                 SELECT child.pole_id AS broken_pole, parent.pole_id AS parent_pole, child.pincode
                 FROM poles child
                 JOIN poles parent ON child.parent_pole_id = parent.pole_id
                 WHERE child.dt_id = $1 
                   AND child.is_live = false 
-                  AND parent.is_live = true;
+                  AND parent.is_live = true
+                  AND NOT EXISTS (
+                      SELECT 1 FROM poles grandchild 
+                      WHERE grandchild.parent_pole_id = child.pole_id 
+                      AND grandchild.is_live = true
+                  );
             `;
             const spanRes = await pool.query(spanQuery, [dt_id]);
 
             if (spanRes.rows.length > 0) {
-                // There could be multiple simultaneous faults, loop through them
                 for (let fault of spanRes.rows) {
                     const target_id = `${fault.parent_pole} -> ${fault.broken_pole}`;
                     await createTicket('SPAN', dt_id, target_id, dark_poles, fault.pincode);
                 }
             } else {
-                // Edge case: A single sensor died, but its children are live.
-                console.log(`[Localization] Dead sensor detected under ${dt_id}. No ticket created.`);
+                console.log(`[Localization] Dead sensor (Noise) ignored on mapped DT ${dt_id}. No ticket created.`);
             }
         }
     } catch (error) {

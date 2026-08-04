@@ -23,6 +23,7 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_NAME=kspdb
+      - GROQ_API_KEY=${GROQ_API_KEY}
     depends_on:
       - db
 
