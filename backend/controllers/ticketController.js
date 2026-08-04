@@ -80,3 +80,60 @@ export const getTickets = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch tickets' });
     }
 };
+
+
+
+export const updateTicketStatus = async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body; 
+
+    const validStatuses = ['ACKNOWLEDGED', 'CREW_ASSIGNED', 'RESOLVED'];
+    if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
+    }
+
+    try {
+        // 1. Fetch current ticket context
+        const ticketRes = await pool.query(`SELECT dt_id, status FROM tickets WHERE ticket_id = $1`, [id]);
+        
+        if (ticketRes.rows.length === 0) {
+            return res.status(404).json({ error: 'Ticket not found' });
+        }
+
+        const ticket = ticketRes.rows[0];
+
+        // 2. The Physical Reality Check (Crucial for the brief)
+        if (status === 'RESOLVED') {
+            const poleRes = await pool.query(`
+                SELECT COUNT(*) as dark_count 
+                FROM poles 
+                WHERE dt_id = $1 AND is_live = false
+            `, [ticket.dt_id]);
+            
+            const darkCount = parseInt(poleRes.rows[0].dark_count);
+
+            if (darkCount > 0) {
+                return res.status(409).json({ 
+                    error: "Cannot manually resolve ticket. Telemetry indicates poles are still physically dark.",
+                    dark_poles_remaining: darkCount
+                });
+            }
+        }
+
+        // 3. Apply the update
+        const updateQuery = `
+            UPDATE tickets 
+            SET status = $1 
+            WHERE ticket_id = $2 
+            RETURNING *;
+        `;
+        const updateRes = await pool.query(updateQuery, [status, id]);
+
+        console.log(`[API] Ticket ${id} manually updated to ${status}.`);
+        res.json(updateRes.rows[0]);
+
+    } catch (error) {
+        console.error("Failed to update ticket status:", error);
+        res.status(500).json({ error: 'Failed to update ticket status.' });
+    }
+};

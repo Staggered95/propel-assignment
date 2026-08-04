@@ -65,14 +65,17 @@ export default function SimulatorControls() {
     });
 
     try {
-      const promises = formattedTargets.map(target => {
-        if (batchAction === 'fault') return axios.post('/api/simulator/fault', { fault_type: batchTargetType === 'D' ? 'DT' : batchTargetType === 'F' ? 'FEEDER' : 'SPAN', target_id: target });
-        if (batchAction === 'noise') return axios.post('/api/simulator/noise', { target_id: target });
-        if (batchAction === 'repair') return axios.post('/api/simulator/repair', { ticket_id: target });
-      });
+      if (batchAction === 'fault') {
+        const payload = formattedTargets.map(t => ({ fault_type: batchTargetType === 'D' ? 'DT' : batchTargetType === 'F' ? 'FEEDER' : 'SPAN', target_id: t }));
+        await axios.post('/api/simulator/fault', payload);
+      } else if (batchAction === 'noise') {
+        const payload = formattedTargets.map(t => ({ target_id: t }));
+        await axios.post('/api/simulator/noise', payload);
+      } else if (batchAction === 'repair') {
+        const payload = formattedTargets.map(t => ({ ticket_id: t }));
+        await axios.post('/api/simulator/repair', payload);
+      }
 
-      await Promise.allSettled(promises);
-      
       addToast('Batch transmission initiated successfully.', 'success');
     } catch (error) {
       addToast('Batch execution encountered errors.', 'error');

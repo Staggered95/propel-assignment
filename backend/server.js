@@ -3,6 +3,7 @@ import telemetryRoutes from './routes/telemetry.js';
 import simulatorRoutes from './routes/simulator.js';
 import ticketRoutes from './routes/tickets.js';
 import outageRoutes from './routes/outages.js';
+import networkRoutes from './routes/network.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use('/telemetry', telemetryRoutes);
 app.use('/simulator', simulatorRoutes);
 app.use('/tickets', ticketRoutes);
+app.use('/network', networkRoutes); 
 app.use('/outages', outageRoutes);
 
 // Health check for Docker
