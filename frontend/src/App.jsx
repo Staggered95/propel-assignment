@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { AlertTriangle, Activity, CheckCircle, Bot, Zap } from 'lucide-react';
 import NetworkMap from './components/NetworkMap';
+import SimulatorControls from './components/SimulatorControls';
 
 export default function App() {
   const [tickets, setTickets] = useState([]);
@@ -81,6 +82,7 @@ export default function App() {
         {/* Left Pane: The Map */}
         <div className="flex-1 bg-stone-800 rounded-lg border border-stone-700 relative overflow-hidden">
           <NetworkMap />
+          <SimulatorControls/>
         </div>
 
         {/* Right Pane: Incident Queue */}
