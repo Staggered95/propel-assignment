@@ -1,6 +1,8 @@
 services:
   db:
     image: postgres:15-alpine
+    container_name: kspdb-db
+    restart: unless-stopped
     environment:
       POSTGRES_USER: kspdb_admin
       POSTGRES_PASSWORD: kspdb@admin
@@ -10,12 +12,15 @@ services:
     volumes:
       - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
       - pgdata:/var/lib/postgresql/data
-    restart: unless-stopped
 
   backend:
-    build: ./backend
-    expose:
-      - "3000"
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: kspdb-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
     environment:
       - DB_USER=kspdb_admin
       - DB_PASSWORD=kspdb@admin
@@ -25,31 +30,23 @@ services:
       - GROQ_API_KEY=${GROQ_API_KEY}
     depends_on:
       - db
-    restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
-    expose:
-      - "80"
-    depends_on:
-      - backend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
+    container_name: kspdb-frontend
     restart: unless-stopped
-
-  nginx:
-    image: nginx:alpine
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot
     depends_on:
-      - frontend
       - backend
-    restart: unless-stopped
-    command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
 
 volumes:
   pgdata:
