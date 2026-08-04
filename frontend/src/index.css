@@ -1,1 +1,89 @@
 @import "tailwindcss";
+
+/* Everforest Dark (Default) */
+:root {
+  --bg-primary: #2d353b;
+  --bg-secondary: #343f44;
+  --bg-hover: #3d484d;
+  --bg-active: #475258;
+
+  --txt-primary: #d3c6aa;
+  --txt-secondary: #9da9a0;
+  --txt-muted: #859289;
+
+  --stat-success: #a7c080; /* Everforest Green */
+  --stat-error: #e67e80;   /* Everforest Red */
+  --stat-warning: #dbbc7f; /* Everforest Yellow */
+  --stat-info: #7fbbb3;    /* Everforest Blue */
+
+  --bdr: #475258;
+  --bdr-hover: #546169;
+}
+
+/* Everforest Light */
+[data-theme="light"] {
+  --bg-primary: #fdf6e3;
+  --bg-secondary: #f4f0d9;
+  --bg-hover: #efebd4;
+  --bg-active: #e6e2cc;
+
+  --txt-primary: #5c6a72;
+  --txt-secondary: #8da101;
+  --txt-muted: #939f91;
+
+  --stat-success: #8da101;
+  --stat-error: #f85552;
+  --stat-warning: #dfa000;
+  --stat-info: #3a94c5;
+
+  --bdr: #e6e2cc;
+  --bdr-hover: #d3c6aa;
+}
+
+@theme {
+  --color-background-primary: var(--bg-primary);
+  --color-background-secondary: var(--bg-secondary);
+  --color-background-hover: var(--bg-hover);
+  --color-background-active: var(--bg-active);
+
+  --color-text-primary: var(--txt-primary);
+  --color-text-secondary: var(--txt-secondary);
+  --color-text-muted: var(--txt-muted);
+
+  --color-success: var(--stat-success);
+  --color-error: var(--stat-error);
+  --color-warning: var(--stat-warning);
+  --color-info: var(--stat-info);
+
+  --color-border: var(--bdr);
+  --color-border-hover: var(--bdr-hover);
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+
+/* Add this to the bottom of index.css */
+
+/* Tints the pure-black Carto tiles into Everforest Dark */
+.theme-map-dark .leaflet-tile-pane {
+  filter: sepia(30%) hue-rotate(110deg) brightness(95%) contrast(90%);
+  opacity: 0.8; 
+}
+
+/* Tints the pure-white Carto tiles into Everforest Light */
+.theme-map-light .leaflet-tile-pane {
+  filter: sepia(40%) hue-rotate(50deg) brightness(95%) contrast(90%);
+}
+
+/* Ensure the map container background matches our theme behind the tiles */
+.leaflet-container {
+  background-color: var(--bg-primary) !important;
+}
+
+
+body {
+  @apply bg-background-primary text-text-primary transition-colors duration-300;
+}
