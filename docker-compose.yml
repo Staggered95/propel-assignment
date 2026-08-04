@@ -14,8 +14,8 @@ services:
 
   backend:
     build: ./backend
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
       - DB_USER=kspdb_admin
       - DB_PASSWORD=kspdb@admin
@@ -30,13 +30,26 @@ services:
   frontend:
     build:
       context: ./frontend
-      args:
-        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-}
-    ports:
-      - "80:80"
+    expose:
+      - "80"
     depends_on:
       - backend
     restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+    command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
 
 volumes:
   pgdata:
