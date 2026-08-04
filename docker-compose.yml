@@ -4,15 +4,27 @@ services:
   db:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: Shubham
-      POSTGRES_PASSWORD: Staggered@95
+      POSTGRES_USER: kspdb_admin
+      POSTGRES_PASSWORD: kspdb@admin
       POSTGRES_DB: kspdb
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
-      # This maps your local init.sql to the container's init folder
       - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
       - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_USER=kspdb_admin
+      - DB_PASSWORD=kspdb@admin
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=kspdb
+    depends_on:
+      - db
 
 volumes:
   pgdata:
