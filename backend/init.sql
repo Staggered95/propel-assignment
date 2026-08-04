@@ -34,3 +34,11 @@ CREATE TABLE tickets (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     verified_at TIMESTAMP
 );
+
+-- Create the scheduled outages table (Mocking external persistence)
+CREATE TABLE scheduled_outages (
+    id SERIAL PRIMARY KEY,
+    dt_id VARCHAR(50) NOT NULL,
+    start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end_time TIMESTAMP NOT NULL
+);
