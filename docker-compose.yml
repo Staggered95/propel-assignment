@@ -4,9 +4,9 @@ services:
     container_name: kspdb-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: kspdb_admin
-      POSTGRES_PASSWORD: kspdb@admin
-      POSTGRES_DB: kspdb
+      POSTGRES_USER: ${DB_USER:-kspdb_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-kspdb@admin}
+      POSTGRES_DB: ${DB_NAME:-kspdb}
     ports:
       - "5434:5432"
     volumes:
@@ -22,11 +22,11 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DB_USER=kspdb_admin
-      - DB_PASSWORD=kspdb@admin
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_NAME=kspdb
+      - DB_USER=${DB_USER:-kspdb_admin}
+      - DB_PASSWORD=${DB_PASSWORD:-kspdb@admin}
+      - DB_HOST=${DB_HOST:-db}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-kspdb}
       - GROQ_API_KEY=${GROQ_API_KEY}
     depends_on:
       - db
@@ -39,7 +39,6 @@ services:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
     container_name: kspdb-frontend
     restart: unless-stopped
-    # NOTICE: Only port 80 is here. No SSL volumes!
     ports:
       - "80:80"
     depends_on:
