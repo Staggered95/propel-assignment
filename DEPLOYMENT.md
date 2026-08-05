@@ -12,9 +12,9 @@ Ensure your local environment meets the following baseline requirements:
 The repository is configured to boot instantly using fallback environment variables. 
 
 1. Clone the repository:
-   `git clone <repository_url>`
+   `git clone https://github.com/Staggered95/propel-assignment.git`
 2. Navigate into the directory:
-   `cd <repository_directory>`
+   `cd propel-assignment`
 3. Build and launch the stack in detached mode:
    `docker compose up -d --build`
 
@@ -30,7 +30,7 @@ The application uses the following variables. For local deployment, Docker will 
 
 ## Verification
 Wait approximately 10 seconds for the database to finish its seeding script, then open your browser:
-* **URL:** `http://localhost:80`
+* **URL:** `http://localhost:80` or simply `http://localhost`
 * **Expected Output:** The KSPDB Operator Console will load, displaying a map populated with green grid assets and a completely empty Active Incident Queue.
 
 ---
@@ -49,9 +49,7 @@ Wait approximately 10 seconds for the database to finish its seeding script, the
 **Symptom:** The frontend UI loads successfully, but the map is blank and the console throws a `Connection reset by peer` or CORS error.
 **Fix:** The Vite development server might be running instead of Nginx, or the Nginx reverse proxy cannot reach the backend. Ensure you are accessing the site over `http://localhost:80` (not port 5173). Check the Nginx configuration to ensure the `/api/` block is proxying to `http://backend:3000/`.
 
-### Silent Ticket Failure on Single Poles
-**Symptom:** Injecting a fault into a single pole does not generate a ticket, but batch operations work normally.
-**Fix:** This is a known database driver quirk. The PostgreSQL `pg` driver converts `COUNT()` BigInt results into strings. Ensure the node backend casts the result using `parseInt(dark_poles)` before performing strict equality checks (`=== 1`) in the noise filter.
+
 
 ---
 

@@ -1,7 +1,7 @@
 # System Architecture
 
 ## 1. Data Flow Diagram
-*(A visual representation of telemetry flowing from the physical pole IoT devices, through the ingestion engine, into the fault localization algorithm, and rendering on the operator's control screen.)*
+*(A visual representation of telemetry flowing from the physical pole IoT devices, through the ingestion engine, into the fault localization algorithm)*
 
 ![Architecture Diagram](./assets/diagram.jpg)
 *(Space reserved for hand-drawn/photographed diagram in the root `assets` directory)*
@@ -14,7 +14,7 @@ The system is built to handle the chaotic reality of physical IoT networks, spec
 * **Arrival:** Telemetry arrives via the `POST /api/telemetry` endpoint. The Node.js Express backend leverages connection pooling to handle concurrent requests without dropping them.
 * **Bursts (The Thundering Herd):** When a feeder fails, thousands of devices send `power_lost` gasps simultaneously. The ingestion engine absorbs this burst using Node's asynchronous event loop and PostgreSQL's recycled connection pool (typically 20-30 concurrent connections). The backend returns an immediate `202 Accepted` and processes the DB writes in the background to prevent bottlenecking.
 * **Duplicates & Out-of-Order Messages:** The system operates on a "last-write-wins" eventual consistency model for pole status (`is_live: boolean`). If duplicate dying gasps arrive, the database simply overwrites the boolean.
-* **Clock Skew:** IoT device clocks are notoriously unreliable. The system ignores device-side timestamps and applies a `CURRENT_TIMESTAMP` strictly at the database ingestion layer, guaranteeing chronological integrity.
+* **Clock Skew:** IoT device clocks are often unreliable. The system ignores device-side timestamps and applies a `CURRENT_TIMESTAMP` strictly at the database ingestion layer, guaranteeing chronological integrity.
 
 ---
 
@@ -23,7 +23,7 @@ The physical grid is a strict hierarchy (Feeder -> Transformer -> Pole). It has 
 
 * **Schema:** The network is mapped in PostgreSQL using a standard **Adjacency List** pattern. The `poles` table features a `parent_pole_id` column that points to another row within the same table.
 * **Why this representation:** A dedicated Graph Database (like Neo4j) introduces unnecessary infrastructure overhead for a simple, loop-free tree. Furthermore, an Adjacency List maps perfectly into a JavaScript `Map` object.
-* **In-Memory Caching:** To avoid running expensive `WITH RECURSIVE` SQL queries during a storm, the backend queries the database exactly once on boot. It builds an in-memory graph in RAM, reducing topology traversal calculations to ~0.001ms.
+* **In-Memory Caching:** To avoid running expensive `WITH RECURSIVE` SQL queries during a storm, the backend queries the database exactly once on boot. It builds an in-memory graph in RAM, reducing topology traversal calculations.
 
 ---
 
@@ -48,6 +48,8 @@ Operators must trust the dashboard. The system aggressively filters false positi
 * **Debouncing & Pushback:** If an operator attempts to manually resolve a ticket while the physical telemetry still reports dark poles, the system throws an error and refuses to close it, preventing premature ticket clears.
 
 ---
+
+
 
 ## 6. API Surface
 
@@ -80,3 +82,25 @@ AI is explicitly kept out of the deterministic fault localization path to preven
 * **Why this spot:** Operators often have to communicate complex database metrics over a radio to physical repair crews. The AI translates raw telemetry, topology, and PIN codes into a prioritized action plan (e.g., "Dispatch 4 workers to PIN 560078 to replace broken wires at P-000028"). It saves the operator mental parsing time.
 * **Cost per call:** Using Llama3 on Groq, the strict, short prompt consumes roughly 150 tokens per call, amounting to a fraction of a cent per outage.
 * **Failure Fallback:** If the API times out, rate-limits, or becomes unavailable, a `try/catch` block ensures the UI instantly falls back to a hardcoded string template (e.g., `ACTION REQUIRED: Investigate target ${target_id} at PIN ${pincode}`). The system never hangs waiting for the model.
+
+
+## 9. Real-World Constraints & Edge Cases
+
+<details>
+<summary><strong>Click to expand: The physical realities and data constraints this system handles</strong></summary>
+
+The KSPDB network is noisy and imperfect. The system is explicitly designed to tolerate and route around the following documented physical realities:
+
+* **The 60% Missing Topology:** Roughly 60% of distribution transformers lack `seq_on_line` and `parent_pole_id` data. The algorithm degrades gracefully to provide DT-level cluster alerts rather than failing to map the fault.
+* **The 9% Blind Spot:** Approximately 9% of poles have no IoT device fitted. The localization logic calculates boundaries based on the nearest reporting upstream and downstream nodes.
+* **30% Packet Loss (Dying Gasps):** When power is lost, devices successfully transmit their `power_lost` message only about 70% of the time due to capacitor limits and network congestion. 
+* **Firmware 1.2.x Silence:** Roughly 8% of the fleet runs legacy firmware that never sends a `power_lost` event, simply stopping its heartbeats instead.
+* **The 4% Baseline Offline Rate:** Approximately 4% of the fleet is offline at any given moment due to vandalism, water ingress, or dead modems.
+* **Dead Sensors vs. Real Outages:** A single pole reporting dark while its downstream children remain live is electrically impossible. The system identifies this as a broken sensor point, not a grid outage, preventing false tickets.
+* **Clock Skew:** Device timestamps can be skewed by up to ±90 seconds. The ingestion engine ignores device timestamps in favor of database-level `CURRENT_TIMESTAMP` to maintain chronological integrity.
+* **Scheduled Maintenance:** Feeders and DTs are routinely taken down for load shedding or maintenance. The system cross-references the scheduled outage API to suppress false alerts during these windows.
+* **Simultaneous Storm Faults:** During severe weather, multiple spans can fail simultaneously. The algorithm tracks distinct live/dark boundaries to separate them into distinct tickets without merging them incorrectly.
+
+</details>
+
+---

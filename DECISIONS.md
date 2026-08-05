@@ -5,10 +5,7 @@
 **Rejected:** A single compose file containing Let's Encrypt volume mounts, or requiring a manual `.env` file to set database passwords.
 **Why:** Acceptance Gate G2 requires the repository to boot cleanly on a reviewer's local machine with a single command and no hand-editing. Mounting missing SSL certificates locally causes Nginx to crash loop. This split allows seamless local grading while preserving a secure, automated CI/CD pipeline for the live deployment.
 
-### Universal Noise Filter & Leaf Node Handling
-**Chosen:** If exactly 1 pole goes dark under a transformer, the system silently ignores it as sensor noise. 
-**Rejected:** Attempting to build complex graph-edge logic to determine if a single offline pole is a wire snap at a leaf node (dead end).
-**Why:** A real wire break almost universally takes out multiple downstream poles. Furthermore, during development, the PostgreSQL `pg` driver returned `COUNT()` as a string (BigInt conversion). `dark_poles === 1` failed silently. Casting the count to an integer and applying a universal noise filter solved both the data type bug and the leaf-node false positive problem.
+
 
 ### In-Memory Topology Mapping
 **Chosen:** Loading the entire PostgreSQL adjacency list into a Node.js JavaScript `Map` when the server boots.
