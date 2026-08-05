@@ -1,0 +1,71 @@
+.
+├── AI-WORKFLOW.md
+├── ARCHITECTURE.md
+├── backend
+│   ├── config
+│   │   └── db.js
+│   ├── controllers
+│   │   ├── networkController.js
+│   │   ├── outageController.js
+│   │   ├── simulatorController.js
+│   │   ├── telemetryController.js
+│   │   └── ticketController.js
+│   ├── Dockerfile
+│   ├── init.sql
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── routes
+│   │   ├── network.js
+│   │   ├── outages.js
+│   │   ├── simulator.js
+│   │   ├── telemetry.js
+│   │   └── tickets.js
+│   ├── seed.js
+│   ├── server.js
+│   └── services
+│       ├── localizationService.js
+│       ├── outageService.js
+│       ├── telemetryService.js
+│       ├── ticketService.js
+│       └── topologyService.js
+├── DECISIONS.md
+├── DEPLOYMENT.md
+├── docker-compose.yml
+├── frontend
+│   ├── Dockerfile
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── nginx.conf
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── public
+│   │   ├── favicon.svg
+│   │   ├── icons.svg
+│   │   └── logo.png
+│   ├── README.md
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── assets
+│   │   │   ├── hero.png
+│   │   │   ├── react.svg
+│   │   │   └── vite.svg
+│   │   ├── components
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── NetworkMap.jsx
+│   │   │   └── SimulatorControls.jsx
+│   │   ├── contexts
+│   │   │   ├── ThemeProvider.jsx
+│   │   │   └── ToastProvider.jsx
+│   │   ├── index.css
+│   │   ├── main.jsx
+│   │   └── pages
+│   │       ├── Docs.jsx
+│   │       ├── Faults.jsx
+│   │       ├── Home.jsx
+│   │       └── Metrics.jsx
+│   └── vite.config.js
+├── README.md
+└── structure
+
+13 directories, 56 files

@@ -1,0 +1,10 @@
+services:
+  frontend:
+    ports:
+      - "443:443"
+    volumes:
+      # Overwrite the default HTTP nginx.conf with the HTTPS one inside the container
+      - ./frontend/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+      # Mount the SSL certs
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot

@@ -26,7 +26,7 @@ jobs:
             git pull origin main
             
             echo "🐳 Rebuilding and restarting Docker containers..."
-            sudo docker compose up -d --build
+            sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
             
             echo "🧹 Cleaning up old Docker images..."
             sudo docker image prune -f
